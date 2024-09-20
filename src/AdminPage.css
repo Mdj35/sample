@@ -1,0 +1,46 @@
+.admin-reservation-container {
+    padding: 20px;
+  }
+  
+  .admin-box {
+    background-color: #f8f8f8;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+  
+  .reservation-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+  }
+  
+  .reservation-table th, .reservation-table td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: left;
+  }
+  
+  .reservation-table th {
+    background-color: #f2f2f2;
+    font-weight: bold;
+  }
+  
+  .reservation-table tr:nth-child(even) {
+    background-color: #f9f9f9;
+  }
+  
+  .reservation-table tr:hover {
+    background-color: #f1f1f1;
+  }
+  
+  .error-message {
+    color: red;
+    margin-bottom: 20px;
+  }
+  
+  .success-message {
+    color: green;
+    margin-bottom: 20px;
+  }
+  

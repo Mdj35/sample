@@ -1,0 +1,140 @@
+/* Header.css */
+
+/* Colors from CreateAccountPage.css */
+:root {
+    --background-page: #f5f5f5;
+    --background-box: #ffffff;
+    --text-color-dark: #333;
+    --label-color: #666;
+    --input-border-color: #ddd;
+    --focus-color: #e91e63;
+    --hover-button-color: #d81b60;
+    --error-bg-color: #ffe3e3;
+    --error-text-border-color: #e91e63;
+
+    /* Gold and complementary colors */
+    --gold-primary: #ffd700;   /* Gold */
+    --gold-brighter: #ffdf00;  /* Brighter Gold */
+    --gold-darker: #c5a200;    /* Darker Gold for text */
+    --gold-background: #f2e5a2; /* Light Gold Background */
+    --gold-hover-bg: #f0d882; /* Darker Gold on hover */
+    --white-color: #ffffff;     /* White for contrasting text */
+}
+
+/* Basic styles for header */
+.header {
+    background-color: var(--background-page);
+    padding: 15px 30px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    transition: background-color 0.3s ease-in-out;
+}
+
+/* Logo container styles */
+.logo-container {
+    display: flex;
+    align-items: center;
+    transition: opacity 0.5s ease-in-out, transform 0.5s ease-in-out;
+    animation: slideIn 0.5s forwards;
+    animation-delay: 0.1s;
+}
+
+/* Logo image styles */
+.logo {
+    height: 70px;  /* Adjust the height to fit your design */
+    width: auto;   /* Maintain aspect ratio */
+    margin-right: 10px;
+    border-radius: 100%;
+    margin-top: 20px;
+}
+
+/* Navigation list styles */
+.nav-list {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    gap: 25px;
+    transition: gap 0.3s ease-in-out;
+}
+
+/* List item styles */
+.nav-list li {
+    display: inline;
+    position: relative;
+    overflow: hidden;
+    opacity: 0;
+    transform: translateX(-20px);
+    animation: slideIn 0.5s forwards;
+}
+
+/* Define animation for the nav items */
+.nav-list li:nth-child(1) {
+    animation-delay: 0.2s;
+}
+
+.nav-list li:nth-child(2) {
+    animation-delay: 0.3s;
+}
+
+.nav-list li:nth-child(3) {
+    animation-delay: 0.4s;
+}
+
+.nav-list li:nth-child(4) {
+    animation-delay: 0.5s;
+}
+
+/* Link styles */
+.nav-list a {
+    color: var(--text-color-dark);
+    text-decoration: none;
+    font-size: 1.1rem;
+    padding: 8px 12px;
+    display: inline-block;
+    position: relative;
+    z-index: 1;
+    transition: color 0.3s ease-in-out, transform 0.3s;
+    transform-origin: center;
+}
+
+/* Link hover effect */
+.nav-list a:hover {
+    color: var(--white-color);
+    transform: scale(1.05);
+}
+
+/* Link underline animation */
+.nav-list a::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    bottom: -5px;
+    width: 100%;
+    height: 2px;
+    background-color: var(--focus-color);
+    transform: scaleX(0);
+    transform-origin: right;
+    transition: transform 0.3s ease-in-out;
+}
+
+/* Expand underline on hover */
+.nav-list a:hover::after {
+    transform: scaleX(1);
+    transform-origin: left;
+}
+
+/* Slide-in animation keyframes */
+@keyframes slideIn {
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+/* Change background on hover */
+.header:hover {
+    background-color: var(--hover-button-color);
+}

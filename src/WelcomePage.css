@@ -1,0 +1,138 @@
+/* src/components/WelcomePage.css */
+
+/* Keyframe for entry animation */
+@keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  /* Keyframe for fade-out animation */
+  @keyframes fadeOut {
+    from {
+      opacity: 1;
+    }
+    to {
+      opacity: 0;
+    }
+  }
+  
+  .welcome-container {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: stretch;
+    min-height: 100vh;
+    width: 100%;
+    animation: fadeInUp 1s ease-out; /* Apply entry animation */
+    transition: opacity 0.5s ease-out;
+  }
+  
+  .image-container {
+    flex: 1;
+    background-image: url('https://images.pexels.com/photos/853427/pexels-photo-853427.jpeg?cs=srgb&dl=pexels-delbeautybox-211032-853427.jpg&fm=jpg'); /* Replace with your image path */
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    min-height: 50vh;
+    border-top-left-radius: 10px;
+    border-bottom-left-radius: 10px;
+  }
+  
+  .welcome-message-container {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px;
+    box-sizing: border-box;
+    background-color: #ffcf40;
+    min-height: 50vh;
+    border-top-right-radius: 10px;
+    border-bottom-right-radius: 10px;
+    transition: opacity 0.5s ease-out;
+  }
+  
+  .welcome-message {
+    background-color: rgba(255, 255, 255, 0.9);
+    padding: 20px;
+    border-radius: 10px;
+    max-width: 500px;
+    width: 100%;
+    text-align: left;
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+    transition: opacity 0.5s ease-out;
+    animation: fadeInUp 1s ease-out; /* Apply entry animation */
+  }
+  
+  .logo {
+    max-width: 150px;
+    width: 100%;
+    height: auto;
+    margin-bottom: 20px;
+  }
+  
+  .welcome-header h1 {
+    font-size: 2.5rem;
+    color: #333;
+  }
+  
+  .welcome-header p {
+    font-size: 1.2rem;
+    color: #666;
+  }
+  
+  .book-now-button {
+    padding: 10px 20px;
+    font-size: 1rem;
+    background-color: #e91e63;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    margin-top: 20px;
+    transition: background-color 0.3s, opacity 0.5s ease-out;
+    animation: fadeInUp 1s ease-out; /* Apply entry animation */
+  }
+  
+  .book-now-button:hover {
+    background-color: #d81b60;
+  }
+  
+  /* Responsive adjustments for smaller screens */
+  @media (max-width: 768px) {
+    .welcome-container {
+      flex-direction: column;
+    }
+  
+    .image-container, .welcome-message-container {
+      width: 100%;
+      border-radius: 0;
+    }
+  
+    .welcome-message {
+      text-align: center;
+    }
+  
+    .welcome-header h1, .welcome-header p {
+      text-align: center;
+    }
+  
+    .logo {
+      margin: 0 auto 20px;
+    }
+  }
+  
+  .book-now-button.fade-out {
+    opacity: 0;
+  }
+  
+  .fade-out {
+    animation: fadeOut 0.5s ease-out;
+    opacity: 0;
+  }
+  

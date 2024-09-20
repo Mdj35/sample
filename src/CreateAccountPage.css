@@ -1,0 +1,115 @@
+/* src/components/CreateAccountPage.css */
+
+.create-account-container1 {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    background-color: #f5f5f5;
+  }
+  
+  .create-account-box1 {
+    background-color: white;
+    padding: 40px;
+    border-radius: 10px;
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    max-width: 400px;
+  }
+  
+  .create-account-box1 h2 {
+    margin-bottom: 20px;
+    font-size: 1.5rem;
+    color: #333;
+    text-align: center;
+  }
+  
+  .form-group1 {
+    margin-bottom: 15px;
+  }
+  
+  .form-group1 label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+    color: #666;
+  }
+  
+  .form-group1 input {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    font-size: 1rem;
+    box-sizing: border-box;
+  }
+  
+  .form-group1 input:focus {
+    border-color: #e91e63;
+    outline: none;
+  }
+  
+  .create-account-button {
+    width: 100%;
+    padding: 10px;
+    background-color: #e91e63;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    margin-top: 20px;
+  }
+  
+  .create-account-button:hover {
+    background-color: #d81b60;
+  }
+  
+  .back-to-login-button {
+    display: block;
+    margin-top: 20px;
+    color: #e91e63;
+    text-decoration: none;
+    text-align: center;
+  }
+  
+  .back-to-login-button:hover {
+    text-decoration: underline;
+  }
+  
+  .error-message {
+    color: #e91e63;
+    background-color: #ffe3e3;
+    border: 1px solid #e91e63;
+    padding: 10px;
+    border-radius: 5px;
+    margin-bottom: 15px;
+  }
+  
+  /* New CSS for checkbox and terms conditions alignment */
+  .terms-conditions {
+    display: flex;
+    align-items: center;
+    margin-top: 15px;
+  }
+  
+  .terms-conditions input[type="checkbox"] {
+    margin-right: 15px;
+    cursor: pointer;
+  }
+  
+  .terms-conditions label {
+    font-size: 0.9rem;
+    color: #666;
+  }
+  
+  .terms-conditions a {
+    color: #e91e63;
+    text-decoration: none;
+  }
+  
+  .terms-conditions a:hover {
+    text-decoration: underline;
+  }
+                                          

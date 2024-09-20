@@ -1,0 +1,21 @@
+.sales-page-container {
+    padding: 20px;
+}
+
+.sales-box {
+    margin: 0 auto;
+    max-width: 800px;
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.sales-box h2 {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.sales-box canvas {
+    max-width: 100%;
+}
