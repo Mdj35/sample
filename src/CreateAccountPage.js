@@ -72,7 +72,7 @@ const CreateAccountPage = () => {
           setSuccessMessage('Account created successfully!');
           setError('');
           setTimeout(() => {
-            navigate('/login');
+            navigate('https://sample-ne3z.vercel.app/login');
           }, 2000);
         } else {
           setError(data.message || 'An error occurred while creating the account.');
