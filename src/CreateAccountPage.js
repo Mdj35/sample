@@ -10,6 +10,7 @@ const CreateAccountPage = () => {
   const [contactNumber, setContactNumber] = useState('');
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [error, setError] = useState('');
+  const [successMessage, setSuccessMessage] = useState(''); // State for success message
   const navigate = useNavigate();
 
   const handleSubmit = async (event) => {
@@ -18,12 +19,14 @@ const CreateAccountPage = () => {
     // Validate password
     if (password !== confirmPassword) {
       setError('Passwords do not match.');
+      setSuccessMessage(''); // Clear success message
       return;
     }
   
     // Validate terms acceptance
     if (!termsAccepted) {
       setError('You must accept the terms and conditions.');
+      setSuccessMessage(''); // Clear success message
       return;
     }
   
@@ -31,6 +34,7 @@ const CreateAccountPage = () => {
     const contactNumberPattern = /^(?:\+639|09)[0-9]{9,10}$/;
     if (!contactNumberPattern.test(contactNumber)) {
       setError('Contact number must start with +639 or 09 and be followed by 9-10 digits.');
+      setSuccessMessage(''); // Clear success message
       return;
     }
   
@@ -46,13 +50,19 @@ const CreateAccountPage = () => {
   
       const data = await response.json();
       if (data.status === 'success') {
-        alert('Account created successfully!');
-        navigate('/login');
+        setSuccessMessage('Account created successfully!'); // Set success message
+        setField1(''); // Reset fields
+        setField2('');
+        setTimeout(() => {
+          navigate('/login'); // Navigate after a short delay
+        }, 2000); // Delay for 2 seconds
       } else {
         setError(data.message || 'An error occurred while creating the account.');
+        setSuccessMessage(''); // Clear success message
       }
     } catch (error) {
       setError('An error occurred while creating the account.');
+      setSuccessMessage(''); // Clear success message
     }
   };
   
@@ -61,67 +71,67 @@ const CreateAccountPage = () => {
       <div className="create-account-box1">
         <h2>Create Your Account</h2>
         {error && <div className="error-message">{error}</div>}
+        {successMessage && <div className="success-message">{successMessage}</div>} {/* Render success message */}
         <form onSubmit={handleSubmit}>
           <div className="form-group1">
             <div className="form-group1">
-  <label htmlFor="full-name">Full Name</label>
-  <input
-    type="text"
-    id="full-name"
-    value={fullName}
-    onChange={(e) => setFullName(e.target.value)}
-    required
-  />
-</div>
-<div className="form-group1">
-  <label htmlFor="email">Email</label>
-  <input
-    type="email"
-    id="email"
-    value={email}
-    onChange={(e) => setEmail(e.target.value)}
-    required
-  />
-</div>
-<div className="form-group1">
-  <label htmlFor="contact-number">Contact Number</label>
-  <input
-    type="tel"
-    id="contact-number"
-    value={contactNumber}
-    onChange={(e) => setContactNumber(e.target.value)}
-    required
-    maxLength="14" // Limiting input to 14 characters (including +639)
-    pattern="(\+639|09)[0-9]{9,10}" // Matches +639 followed by 9-10 digits or 09 followed by 9 digits
-    title="Contact number must start with +639 or 09 and be followed by 9-10 digits."
-  />
-</div>
-
-<div className="form-group1">
-  <label htmlFor="password">Password</label>
-  <input
-    type="password"
-    id="password"
-    value={password}
-    onChange={(e) => setPassword(e.target.value)}
-    required
-    minLength="8" // Minimum length of 8 characters
-    maxLength="16" // Maximum length of 16 characters
-  />
-</div>
-<div className="form-group1">
-  <label htmlFor="confirm-password">Confirm Password</label>
-  <input
-    type="password"
-    id="confirm-password"
-    value={confirmPassword}
-    onChange={(e) => setConfirmPassword(e.target.value)}
-    required
-    minLength="8" // Minimum length of 8 characters
-    maxLength="16" // Maximum length of 16 characters
-  />
-</div>
-</div>
+              <label htmlFor="full-name">Full Name</label>
+              <input
+                type="text"
+                id="full-name"
+                value={fullName}
+                onChange={(e) => setFullName(e.target.value)}
+                required
+              />
+            </div>
+            <div className="form-group1">
+              <label htmlFor="email">Email</label>
+              <input
+                type="email"
+                id="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+              />
+            </div>
+            <div className="form-group1">
+              <label htmlFor="contact-number">Contact Number</label>
+              <input
+                type="tel"
+                id="contact-number"
+                value={contactNumber}
+                onChange={(e) => setContactNumber(e.target.value)}
+                required
+                maxLength="14" // Limiting input to 14 characters (including +639)
+                pattern="(\+639|09)[0-9]{9,10}" // Matches +639 followed by 9-10 digits or 09 followed by 9 digits
+                title="Contact number must start with +639 or 09 and be followed by 9-10 digits."
+              />
+            </div>
+            <div className="form-group1">
+              <label htmlFor="password">Password</label>
+              <input
+                type="password"
+                id="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                minLength="8" // Minimum length of 8 characters
+                maxLength="16" // Maximum length of 16 characters
+              />
+            </div>
+            <div className="form-group1">
+              <label htmlFor="confirm-password">Confirm Password</label>
+              <input
+                type="password"
+                id="confirm-password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                required
+                minLength="8" // Minimum length of 8 characters
+                maxLength="16" // Maximum length of 16 characters
+              />
+            </div>
+          </div>
 
           <div className="terms-conditions">
             <input
@@ -139,7 +149,6 @@ const CreateAccountPage = () => {
         <Link to="/login" className="back-to-login-button">Back to Login</Link>
       </div>
     </div>
-    
   );
 };
 
