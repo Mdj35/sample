@@ -66,7 +66,7 @@ const CreateAccountPage = () => {
     .then((response) => response.json())
     .then((data) => {
       if (data.status === 'success') {
-        navigate('/login');  // Directly navigate to the login page
+        
       } else {
         console.error('Error:', data.message || 'An error occurred while creating the account.');
       }
