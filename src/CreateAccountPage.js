@@ -13,56 +13,56 @@ const CreateAccountPage = () => {
   const [successMessage, setSuccessMessage] = useState('');
   const navigate = useNavigate();
 
-  const handleSubmit = async (event) => {
+   const handleSubmit = (event) => {
     event.preventDefault();
 
     // Validate password
     if (password !== confirmPassword) {
-      setError('Passwords do not match.');
-      return;
+        setError('Passwords do not match.');
+        return;
     }
 
     // Validate terms acceptance
     if (!termsAccepted) {
-      setError('You must accept the terms and conditions.');
-      return;
+        setError('You must accept the terms and conditions.');
+        return;
     }
 
     // Validate contact number
     const contactNumberPattern = /^(?:\+639|09)[0-9]{9,10}$/;
     if (!contactNumberPattern.test(contactNumber)) {
-      setError('Contact number must start with +639 or 09 and be followed by 9-10 digits.');
-      return;
+        setError('Contact number must start with +639 or 09 and be followed by 9-10 digits.');
+        return;
     }
 
     // Send data to the API
-    try {
-      const response = await fetch('http://vynceianoani.helioho.st/api.php', {
+    fetch('http://vynceianoani.helioho.st/api.php', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
+            'Content-Type': 'application/json',
         },
         body: JSON.stringify({ fullName, email, password, contactNumber }),
-      });
-
-      const data = await response.json();
-      console.log(data); // Log the response for debugging
-      if (data.status === 'success') {
-        setSuccessMessage('Account created successfully!');
-        setError('');
-        setTimeout(() => {
-          navigate('/login');
-        }, 2000);
-      } else {
-        setError(data.message || 'An error occurred while creating the account.');
+    })
+    .then((response) => response.json())
+    .then((data) => {
+        console.log(data); // Log the response for debugging
+        if (data.status === 'success') {
+            setSuccessMessage('Account created successfully!');
+            setError('');
+            setTimeout(() => {
+                navigate('/login');
+            }, 2000);
+        } else {
+            setError(data.message || 'An error occurred while creating the account.');
+            setSuccessMessage('');
+        }
+    })
+    .catch((error) => {
+        console.error('Error:', error); // Log the error for debugging
+        setError('An error occurred while creating the account.');
         setSuccessMessage('');
-      }
-    } catch (error) {
-      console.error('Error:', error); // Log the error for debugging
-      setError('An error occurred while creating the account.');
-      setSuccessMessage('');
-    }
-  };
+    });
+};
 
   return (
     <div className="create-account-container1">
