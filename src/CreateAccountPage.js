@@ -10,7 +10,7 @@ const CreateAccountPage = () => {
   const [contactNumber, setContactNumber] = useState('');
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [error, setError] = useState('');
-  const [successMessage, setSuccessMessage] = useState(''); // New state for success message
+  const [successMessage, setSuccessMessage] = useState('');
   const navigate = useNavigate();
 
   const handleSubmit = async (event) => {
@@ -46,19 +46,21 @@ const CreateAccountPage = () => {
       });
 
       const data = await response.json();
+      console.log(data); // Log the response for debugging
       if (data.status === 'success') {
-        setSuccessMessage('Account created successfully!'); // Set success message
-        setError(''); // Clear any previous error
+        setSuccessMessage('Account created successfully!');
+        setError('');
         setTimeout(() => {
           navigate('/login');
-        }, 2000); // Navigate after 2 seconds
+        }, 2000);
       } else {
         setError(data.message || 'An error occurred while creating the account.');
-        setSuccessMessage(''); // Clear success message if there's an error
+        setSuccessMessage('');
       }
     } catch (error) {
+      console.error('Error:', error); // Log the error for debugging
       setError('An error occurred while creating the account.');
-      setSuccessMessage(''); // Clear success message if there's an error
+      setSuccessMessage('');
     }
   };
 
@@ -67,7 +69,7 @@ const CreateAccountPage = () => {
       <div className="create-account-box1">
         <h2>Create Your Account</h2>
         {error && <div className="error-message">{error}</div>}
-        {successMessage && <div className="success-message">{successMessage}</div>} {/* Display success message */}
+        {successMessage && <div className="success-message">{successMessage}</div>}
         <form onSubmit={handleSubmit}>
           <div className="form-group1">
             <label htmlFor="full-name">Full Name</label>
