@@ -32,59 +32,50 @@ const CreateAccountPage = () => {
   };
 
   const handleSubmit = (event) => {
-    event.preventDefault();
+  event.preventDefault();
 
-    // Validate password
-    if (formData.password !== formData.confirmPassword) {
-      setError('Passwords do not match.');
-      return;
-    }
+  // Validate password
+  if (formData.password !== formData.confirmPassword) {
+    return;
+  }
 
-    // Validate terms acceptance
-    if (!formData.termsAccepted) {
-      setError('You must accept the terms and conditions.');
-      return;
-    }
+  // Validate terms acceptance
+  if (!formData.termsAccepted) {
+    return;
+  }
 
-    // Validate contact number
-    const contactNumberPattern = /^(?:\+639|09)[0-9]{9,10}$/;
-    if (!contactNumberPattern.test(formData.contactNumber)) {
-      setError('Contact number must start with +639 or 09 and be followed by 9-10 digits.');
-      return;
-    }
+  // Validate contact number
+  const contactNumberPattern = /^(?:\+639|09)[0-9]{9,10}$/;
+  if (!contactNumberPattern.test(formData.contactNumber)) {
+    return;
+  }
 
-    // Send data to the API
-    fetch('http://vynceianoani.helioho.st/api.php', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        fullName: formData.fullName,
-        email: formData.email,
-        password: formData.password,
-        contactNumber: formData.contactNumber,
-      }),
+  // Send data to the API
+  fetch('http://vynceianoani.helioho.st/api.php', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      fullName: formData.fullName,
+      email: formData.email,
+      password: formData.password,
+      contactNumber: formData.contactNumber,
+    }),
+  })
+    .then((response) => response.json())
+    .then((data) => {
+      if (data.status === 'success') {
+        navigate('/login');  // Directly navigate to the login page
+      } else {
+        console.error('Error:', data.message || 'An error occurred while creating the account.');
+      }
     })
-      .then((response) => response.json())
-      .then((data) => {
-        if (data.status === 'success') {
-          setSuccessMessage('Account created successfully!');
-          setError('');
-          setTimeout(() => {
-            
-          }, 2000);
-        } else {
-          setError(data.message || 'An error occurred while creating the account.');
-          setSuccessMessage('');
-        }
-      })
-      .catch((error) => {
-        console.error('Error:', error);
-        setError('An error occurred while creating the account.');
-        setSuccessMessage('');
-      });
-  };
+    .catch((error) => {
+      console.error('Error:', error);
+    });
+};
+
 
   return (
     <div className="create-account-container1">
