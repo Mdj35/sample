@@ -94,32 +94,33 @@ const AdminReservationPage = () => {
               <th>Action</th>
             </tr>
           </thead>
-          <tbody>
-            {reservations.map(reservation => (
-              <tr key={reservation.id}>
-                <td>{reservation.user_email}</td>
-                <td>{reservation.service}</td>
-                <td>{reservation.date}</td>
-                <td>{reservation.time}</td>
-                <td>₱{reservation.price}</td>
-                <td>{reservation.status}</td>
-                <td>
-                  {reservation.status !== 'approved' && reservation.status !== 'rejected' ? (
-                    <>
-                      <button onClick={() => updateStatus(reservation.id, 'approved')}>
-                        Approve
-                      </button>
-                      <button onClick={() => updateStatus(reservation.id, 'rejected')}>
-                        Reject
-                      </button>
-                    </>
-                  ) : (
-                    <span>No actions available</span>
-                  )}
-                </td>
-              </tr>
-            ))}
-          </tbody>
+<tbody>
+  {reservations.map(reservation => (
+    <tr key={reservation.id}>
+      <td>{reservation.user_email}</td>
+      <td>{reservation.service}</td>
+      <td>{reservation.date}</td>
+      <td>{reservation.time}</td>
+      <td>₱{reservation.price}</td>
+      <td>{reservation.status}</td>
+      <td>
+        {reservation.status !== 'approved' && reservation.status !== 'rejected' && reservation.status !== 'completed' ? (
+          <>
+            <button onClick={() => updateStatus(reservation.id, 'approved')}>
+              Approve
+            </button>
+            <button onClick={() => updateStatus(reservation.id, 'rejected')}>
+              Reject
+            </button>
+          </>
+        ) : (
+          <span>No actions available</span>
+        )}
+      </td>
+    </tr>
+  ))}
+</tbody>
+
         </table>
       </div>
     </div>
