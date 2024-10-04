@@ -11,6 +11,7 @@ const FinalizeReservationPage = () => {
   const location = useLocation();
 
   useEffect(() => {
+    // Retrieve reservation details from location state
     const details = location.state;
     if (details) {
       setReservationDetails(details);
@@ -32,8 +33,8 @@ const FinalizeReservationPage = () => {
       .then(response => response.json())
       .then(data => {
         if (data.status === 'success') {
-          // After successful reservation, initiate payment
-          adyen_payment();
+          setPending(false);
+          navigate('/userpage'); // Redirect to a success page
         } else {
           setPending(false);
           setError(data.message);
@@ -45,52 +46,6 @@ const FinalizeReservationPage = () => {
         setError('Failed to confirm reservation.');
       });
   };
-
-  function adyen_payment() {
-    
-    // Adyen Node API Library v17.3.0
-    const { Client, Config, CheckoutAPI } = require('@adyen/api-library');
-    const config = new Config();
-    config.apiKey = "AQEphmfuXNWTK0Qc+iSTmm07lPCaXIJCA8EaATwaBqqIRXtqP/+nRaF4A9YQwV1bDb7kfNy1WIxIIkxgBw==-U8PLMMnRmNHQVCGHXHT6fK/undY8MW3MwUJumdrYnGY=-i1i(y39D)N}#FcdEBBt";
-    config.merchantAccount = 'ChicStation209ECOM';
-    
-    const client = new Client({ config });
-    client.setEnvironment("TEST");
-    const checkout = new CheckoutAPI(client);
-    
-    // Create payment request object
-    checkout.PaymentsApi.payments({
-      amount: {
-        value: reservationDetails.price * 100, // Convert PHP to cents
-        currency: "PHP"
-      },
-      paymentMethod: {
-        type: "scheme",
-        "encryptedCardNumber": "test_5555555555554444",
-        "encryptedExpiryMonth": "test_03",
-        "encryptedExpiryYear": "test_2030",
-        "encryptedSecurityCode": "test_737",
-        holderName: "John Smith"
-      },
-      reference: reservationDetails.email ,
-      shopperInteraction: "Ecommerce",
-      recurringProcessingModel: "CardOnFile",
-      storePaymentMethod: "true",
-      merchantAccount: config.merchantAccount,
-      shopperReference: "YOUR_SHOPPER_REFERENCE",
-      returnUrl: "https://your-company.com/..."
-    })
-    .then(res => {
-      console.log(res);
-      setPending(false);
-      navigate('/userpage'); // Redirect on successful payment
-    })
-    .catch(res => {
-      console.log(res);
-      setPending(false);
-      setError('Payment failed.');
-    });
-  }
 
   return (
     <div className="finalize-reservation-container">
@@ -108,9 +63,9 @@ const FinalizeReservationPage = () => {
           <p><strong>Price:</strong> {reservationDetails.price}</p>
         </div>
         <div className="sample-button">
-          <button onClick={handleConfirmReservation} disabled={pending}>
-            {pending ? 'Processing...' : 'Confirm Reservation'}
-          </button>
+        <button onClick={handleConfirmReservation} disabled={pending}>
+          {pending ? 'Processing...' : 'Confirm Reservation'}
+        </button>
         </div>
       </div>
     </div>

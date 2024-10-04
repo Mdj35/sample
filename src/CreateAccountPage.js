@@ -3,155 +3,132 @@ import { Link, useNavigate } from 'react-router-dom';
 import './CreateAccountPage.css';
 
 const CreateAccountPage = () => {
-  const [formData, setFormData] = useState({
-    fullName: '',
-    email: '',
-    password: '',
-    confirmPassword: '',
-    contactNumber: '',
-    termsAccepted: false,
-  });
+  const [fullName, setFullName] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [contactNumber, setContactNumber] = useState('');
+  const [termsAccepted, setTermsAccepted] = useState(false);
   const [error, setError] = useState('');
-  const [successMessage, setSuccessMessage] = useState('');
   const navigate = useNavigate();
 
-  const handleInputChange = (event) => {
-    const { name, value } = event.target;
-    setFormData((prevData) => ({
-      ...prevData,
-      [name]: value,
-    }));
-  };
-
-  const handleCheckboxChange = (event) => {
-    const { checked } = event.target;
-    setFormData((prevData) => ({
-      ...prevData,
-      termsAccepted: checked,
-    }));
-  };
-
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
   
     // Validate password
-    if (formData.password !== formData.confirmPassword) {
+    if (password !== confirmPassword) {
+      setError('Passwords do not match.');
       return;
     }
   
     // Validate terms acceptance
-    if (!formData.termsAccepted) {
+    if (!termsAccepted) {
+      setError('You must accept the terms and conditions.');
       return;
     }
   
     // Validate contact number
     const contactNumberPattern = /^(?:\+639|09)[0-9]{9,10}$/;
-    if (!contactNumberPattern.test(formData.contactNumber)) {
+    if (!contactNumberPattern.test(contactNumber)) {
+      setError('Contact number must start with +639 or 09 and be followed by 9-10 digits.');
       return;
     }
   
     // Send data to the API
-    fetch('http://vynceianoani.helioho.st/api.php', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        fullName: formData.fullName,
-        email: formData.email,
-        password: formData.password,
-        contactNumber: formData.contactNumber,
-      }),
-    })
-      .then((response) => response.json())
-      .then((data) => {
-        if (data.status === 'success') {
-        // Directly navigate to the login page
-        } else {
-          console.error('Error:', data.message || 'An error occurred while creating the account.');
-        }
-      })
-      .catch((error) => {
-        console.error('Error:', error);
+    try {
+      const response = await fetch('https://vynceianoani.helioho.st/api.php', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ fullName, email, password, contactNumber }),
       });
+  
+      const data = await response.json();
+      if (data.status === 'success') {
+        alert('Account created successfully!');
+        navigate('/login');
+      } else {
+        setError(data.message || 'An error occurred while creating the account.');
+      }
+    } catch (error) {
+      setError('An error occurred while creating the account.');
+    }
   };
   
-
   return (
     <div className="create-account-container1">
       <div className="create-account-box1">
         <h2>Create Your Account</h2>
         {error && <div className="error-message">{error}</div>}
-        {successMessage && <div className="success-message">{successMessage}</div>}
         <form onSubmit={handleSubmit}>
           <div className="form-group1">
-            <label htmlFor="full-name">Full Name</label>
-            <input
-              type="text"
-              id="full-name"
-              name="fullName"
-              value={formData.fullName}
-              onChange={handleInputChange}
-              required
-            />
-          </div>
-          <div className="form-group1">
-            <label htmlFor="email">Email</label>
-            <input
-              type="email"
-              id="email"
-              name="email"
-              value={formData.email}
-              onChange={handleInputChange}
-              required
-            />
-          </div>
-          <div className="form-group1">
-            <label htmlFor="contact-number">Contact Number</label>
-            <input
-              type="tel"
-              id="contact-number"
-              name="contactNumber"
-              value={formData.contactNumber}
-              onChange={handleInputChange}
-              required
-              maxLength="14"
-              pattern="(\+639|09)[0-9]{9,10}"
-              title="Contact number must start with +639 or 09 and be followed by 9-10 digits."
-            />
-          </div>
-          <div className="form-group1">
-            <label htmlFor="password">Password</label>
-            <input
-              type="password"
-              id="password"
-              name="password"
-              value={formData.password}
-              onChange={handleInputChange}
-              required
-              minLength="8"
-              maxLength="16"
-            />
-          </div>
-          <div className="form-group1">
-            <label htmlFor="confirm-password">Confirm Password</label>
-            <input
-              type="password"
-              id="confirm-password"
-              name="confirmPassword"
-              value={formData.confirmPassword}
-              onChange={handleInputChange}
-              required
-              minLength="8"
-              maxLength="16"
-            />
-          </div>
+            <div className="form-group1">
+  <label htmlFor="full-name">Full Name</label>
+  <input
+    type="text"
+    id="full-name"
+    value={fullName}
+    onChange={(e) => setFullName(e.target.value)}
+    required
+  />
+</div>
+<div className="form-group1">
+  <label htmlFor="email">Email</label>
+  <input
+    type="email"
+    id="email"
+    value={email}
+    onChange={(e) => setEmail(e.target.value)}
+    required
+  />
+</div>
+<div className="form-group1">
+  <label htmlFor="contact-number">Contact Number</label>
+  <input
+    type="tel"
+    id="contact-number"
+    value={contactNumber}
+    onChange={(e) => setContactNumber(e.target.value)}
+    required
+    maxLength="14" // Limiting input to 14 characters (including +639)
+    pattern="(\+639|09)[0-9]{9,10}" // Matches +639 followed by 9-10 digits or 09 followed by 9 digits
+    title="Contact number must start with +639 or 09 and be followed by 9-10 digits."
+  />
+</div>
+
+<div className="form-group1">
+  <label htmlFor="password">Password</label>
+  <input
+    type="password"
+    id="password"
+    value={password}
+    onChange={(e) => setPassword(e.target.value)}
+    required
+    minLength="8" // Minimum length of 8 characters
+    maxLength="16" // Maximum length of 16 characters
+  />
+</div>
+<div className="form-group1">
+  <label htmlFor="confirm-password">Confirm Password</label>
+  <input
+    type="password"
+    id="confirm-password"
+    value={confirmPassword}
+    onChange={(e) => setConfirmPassword(e.target.value)}
+    required
+    minLength="8" // Minimum length of 8 characters
+    maxLength="16" // Maximum length of 16 characters
+  />
+</div>
+</div>
+
           <div className="terms-conditions">
             <input
               type="checkbox"
               id="terms-conditions"
-              checked={formData.termsAccepted}
-              onChange={handleCheckboxChange}
+              checked={termsAccepted}
+              onChange={(e) => setTermsAccepted(e.target.checked)}
             />
             <label htmlFor="terms-conditions">
               I accept the <Link to="/terms">terms and conditions</Link>.
@@ -162,6 +139,7 @@ const CreateAccountPage = () => {
         <Link to="/login" className="back-to-login-button">Back to Login</Link>
       </div>
     </div>
+    
   );
 };
 

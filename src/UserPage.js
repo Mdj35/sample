@@ -195,7 +195,7 @@ const UserReservationPage = () => {
           </div>
           <button type="submit" className="reserve-button" disabled={pending}>
             {pending ? 'Proceeding...' : 'Proceed'}
-          </button>
+          </button>   
         </form>
       </div>
     </div>
