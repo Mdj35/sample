@@ -1,4 +1,3 @@
-// CreateAdmin.js
 import React, { useState, useEffect } from 'react';
 import Header from './SuperAdminHeader';
 
@@ -12,13 +11,22 @@ const CreateAdmin = () => {
         branch: '',
     });
     const [servicesList, setServicesList] = useState([]);
+    const [filteredServices, setFilteredServices] = useState([]); // State for filtered services
     const [branchesList, setBranchesList] = useState([]);
     const [message, setMessage] = useState('');
+    const [serviceFilter, setServiceFilter] = useState(''); // State for filtering services by name
+    const [serviceTypeFilter, setServiceTypeFilter] = useState(''); // State for filtering services by type
+
+    // Sample service types (this could be fetched from an API as well)
+    const serviceTypes = ['All', 'Nails', 'Lash and Brow', 'Waxing','Hair and Make-Up'];
 
     const fetchServices = () => {
         fetch('https://vynceianoani.helioho.st/getservices.php')
             .then((response) => response.json())
-            .then((data) => setServicesList(data.services))
+            .then((data) => {
+                setServicesList(data.services);
+                setFilteredServices(data.services); // Initialize filtered services to show all initially
+            })
             .catch((error) => console.error('Error fetching services:', error));
     };
 
@@ -76,6 +84,41 @@ const CreateAdmin = () => {
             });
     };
 
+    // Filter services based on input and selected type
+    const handleServiceFilterChange = (e) => {
+        const filter = e.target.value.toLowerCase();
+        setServiceFilter(filter);
+
+        filterServices(filter, serviceTypeFilter);
+    };
+
+    // Filter services based on selected type
+    const handleServiceTypeChange = (e) => {
+        const typeFilter = e.target.value;
+        setServiceTypeFilter(typeFilter);
+
+        filterServices(serviceFilter, typeFilter);
+    };
+
+    // Function to filter services by both name and type
+    const filterServices = (nameFilter, typeFilter) => {
+        let filtered = servicesList;
+
+        if (typeFilter && typeFilter !== 'All') {
+            filtered = filtered.filter((service) =>
+                service.type && service.type.toLowerCase() === typeFilter.toLowerCase()
+            );
+        }
+
+        if (nameFilter) {
+            filtered = filtered.filter((service) =>
+                service.name && service.name.toLowerCase().includes(nameFilter)
+            );
+        }
+
+        setFilteredServices(filtered);
+    };
+
     useEffect(() => {
         fetchServices();
         fetchBranches();
@@ -83,7 +126,7 @@ const CreateAdmin = () => {
 
     return (
         <div>
-            <Header/>
+            <Header />
             <h2>Create Admin Account</h2>
             {message && <div className="message">{message}</div>}
             <form onSubmit={handleSubmit}>
@@ -144,11 +187,37 @@ const CreateAdmin = () => {
                         ))}
                     </select>
                 </div>
+
+                {/* Filter Input for Service Name */}
+                <div className="form-group">
+                    <label>Filter Services by Name:</label>
+                    <input
+                        type="text"
+                        value={serviceFilter}
+                        onChange={handleServiceFilterChange}
+                        placeholder="Filter services by name..."
+                        className="input-field"
+                    />
+                </div>
+
+                {/* Dropdown to Filter by Service Type */}
+                <div className="form-group">
+                    <label>Filter Services by Type:</label>
+                    <select value={serviceTypeFilter} onChange={handleServiceTypeChange}>
+                        {serviceTypes.map((type, index) => (
+                            <option key={index} value={type}>
+                                {type}
+                            </option>
+                        ))}
+                    </select>
+                </div>
+
+                {/* Filtered Services List */}
                 <div className="form-group">
                     <label>Services Offered:</label>
                     <table className="services-table">
                         <tbody>
-                            {servicesList.map((service, index) => (
+                            {filteredServices.map((service, index) => (
                                 <tr key={index}>
                                     <td>
                                         <input
@@ -166,6 +235,7 @@ const CreateAdmin = () => {
                         </tbody>
                     </table>
                 </div>
+
                 <button type="submit">Create Admin</button>
             </form>
         </div>

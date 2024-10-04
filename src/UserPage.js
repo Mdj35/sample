@@ -6,10 +6,13 @@ import './UserPage.css';
 const UserReservationPage = () => {
   const [services, setServices] = useState([]);
   const [branches, setBranches] = useState([]);
+  const [selectedServiceType, setSelectedServiceType] = useState('');
+  const [filteredServices, setFilteredServices] = useState([]);
   const [selectedService, setSelectedService] = useState('');
   const [selectedBranch, setSelectedBranch] = useState('');
   const [date, setDate] = useState('');
   const [time, setTime] = useState('');
+  const [availableTimes, setAvailableTimes] = useState([]);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [pending, setPending] = useState(false);
@@ -46,9 +49,40 @@ const UserReservationPage = () => {
     }
   }, [email]);
 
+  // Filter services by selected service type
+  useEffect(() => {
+    if (selectedServiceType) {
+      const filtered = services.filter(service => service.type === selectedServiceType);
+      setFilteredServices(filtered);
+    } else {
+      setFilteredServices([]);
+    }
+  }, [selectedServiceType, services]);
+
+  // Generate available times based on service type
+  useEffect(() => {
+    const times = [];
+    const startHour = 9; // 9 AM
+    const endHour = 19; // 7 PM (19:00)
+
+    const interval = selectedServiceType === 'Nails' ? 2 : 1; // 2 hours for 'Nails', 1 hour for other services
+
+    for (let hour = startHour; hour < endHour; hour += interval) {
+      const timeString = `${hour}:00-${hour + interval}:00`;
+      times.push(timeString);
+    }
+
+    setAvailableTimes(times);
+  }, [selectedServiceType]);
+
+  const handleServiceTypeChange = (event) => {
+    setSelectedServiceType(event.target.value);
+    setSelectedService(''); // Reset service selection when service type changes
+  };
+
   const handleServiceChange = (event) => {
     const selectedService = event.target.value;
-    const service = services.find(service => service.name === selectedService);
+    const service = filteredServices.find(service => service.name === selectedService);
     setSelectedService(selectedService);
     setServicePrice(service ? service.price : null);
   };
@@ -68,7 +102,7 @@ const UserReservationPage = () => {
       date,
       time,
       price: servicePrice,
-      email: email // Store the email in reservation details
+      email: email
     }));
 
     // Navigate to employee selection page
@@ -85,15 +119,30 @@ const UserReservationPage = () => {
         {pending && <div className="pending-message">Reservation in progress...</div>}
         <form onSubmit={handleSubmit}>
           <div className="form-group">
+            <label htmlFor="serviceType">Service Type</label>
+            <select
+              id="serviceType"
+              value={selectedServiceType}
+              onChange={handleServiceTypeChange}
+              disabled={pending}
+            >
+              <option value="">Select a service type</option>
+              <option value="Nails">Nails</option>
+              <option value="Lash and Brow">Lash and Brow</option>
+              <option value="Waxing">Waxing</option>
+              <option value="Hair and Make-up">Hair and Make-up</option>
+            </select>
+          </div>
+          <div className="form-group">
             <label htmlFor="service">Service</label>
             <select
               id="service"
               value={selectedService}
               onChange={handleServiceChange}
-              disabled={pending}
+              disabled={pending || !selectedServiceType}
             >
               <option value="">Select a service</option>
-              {services.map((service) => (
+              {filteredServices.map((service) => (
                 <option key={service.id} value={service.name}>
                   {service.name} - ₱{service.price}
                 </option>
@@ -129,14 +178,20 @@ const UserReservationPage = () => {
           </div>
           <div className="form-group">
             <label htmlFor="time">Time</label>
-            <input
-              type="time"
+            <select
               id="time"
               value={time}
               onChange={(e) => setTime(e.target.value)}
               required
               disabled={pending}
-            />
+            >
+              <option value="">Select a time</option>
+              {availableTimes.map((timeSlot) => (
+                <option key={timeSlot} value={timeSlot}>
+                  {timeSlot}
+                </option>
+              ))}
+            </select>
           </div>
           <button type="submit" className="reserve-button" disabled={pending}>
             {pending ? 'Proceeding...' : 'Proceed'}
