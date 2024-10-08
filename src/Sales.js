@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Line, Bar } from 'react-chartjs-2'; // Import the Bar chart
+import { Line, Bar, Doughnut } from 'react-chartjs-2'; // Import Doughnut chart
 import Header from './SuperAdminHeader';
 import './SalesPage.css';
 import {
@@ -7,8 +7,9 @@ import {
     CategoryScale,
     LinearScale,
     PointElement,
-    BarElement,   // Bar chart element
+    BarElement,
     LineElement,
+    ArcElement,  // Needed for Doughnut chart
     Title,
     Tooltip,
     Legend
@@ -19,8 +20,9 @@ ChartJS.register(
     CategoryScale,
     LinearScale,
     PointElement,
-    BarElement,   // Register BarElement for the bar chart
+    BarElement,
     LineElement,
+    ArcElement,  // Register ArcElement for the doughnut chart
     Title,
     Tooltip,
     Legend
@@ -29,6 +31,7 @@ ChartJS.register(
 const SalesPage = () => {
     const [salesData, setSalesData] = useState([]);
     const [totalSalesPerMonth, setTotalSalesPerMonth] = useState([]);
+    const [serviceData, setServiceData] = useState([]);
 
     useEffect(() => {
         fetch('https://vynceianoani.helioho.st/getsales.php')
@@ -36,13 +39,27 @@ const SalesPage = () => {
             .then(data => {
                 setSalesData(data);
 
+                // Assuming data contains services with accepted status
+                const acceptedServices = data.filter(item => item.status === 'accepted');
+                
+                const serviceCounts = acceptedServices.reduce((acc, curr) => {
+                    acc[curr.service_category] = (acc[curr.service_category] || 0) + 1;
+                    return acc;
+                }, {});
+
+                const serviceArray = Object.keys(serviceCounts).map(category => ({
+                    category,
+                    count: serviceCounts[category]
+                }));
+
+                setServiceData(serviceArray);
+
                 // Calculate the total sales per month
                 const totalSales = data.reduce((acc, curr) => {
                     acc[curr.month_year] = (acc[curr.month_year] || 0) + parseFloat(curr.total_sales);
                     return acc;
                 }, {});
 
-                // Convert the total sales object to an array for display and bar chart data
                 const totalSalesArray = Object.keys(totalSales).map(monthYear => ({
                     monthYear,
                     total: totalSales[monthYear].toFixed(2)
@@ -81,6 +98,18 @@ const SalesPage = () => {
         ]
     };
 
+    // Data for the donut chart (accepted services by category)
+    const doughnutData = {
+        labels: serviceData.map(item => item.category),
+        datasets: [
+            {
+                data: serviceData.map(item => item.count),
+                backgroundColor: ['#36A2EB', '#FFCE56', '#FF6384', '#4BC0C0', '#9966FF', '#FF9F40'],
+                hoverBackgroundColor: ['#36A2EB', '#FFCE56', '#FF6384', '#4BC0C0', '#9966FF', '#FF9F40'],
+            }
+        ]
+    };
+
     const chartOptions = {
         scales: {
             y: {
@@ -98,7 +127,11 @@ const SalesPage = () => {
             </div>
             <div className="sales-box">
                 <h2>Sales per Month</h2>
-                <Bar data={barChartData} options={chartOptions} /> {/* Bar chart for sales per month */}
+                <Bar data={barChartData} options={chartOptions} />
+            </div>
+            <div className="sales-box">
+                <h2>Accepted Services by Category</h2>
+                <Doughnut data={doughnutData} />
             </div>
             <div className="total-sales-summary">
                 <h3>Sales Summary per Month</h3>
