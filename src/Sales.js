@@ -29,42 +29,61 @@ ChartJS.register(
 );
 
 const SalesPage = () => {
+    const [isAuthenticated, setIsAuthenticated] = useState(false); // Track if the user is authenticated
     const [salesData, setSalesData] = useState([]); // For overall sales data
     const [totalSalesPerMonth, setTotalSalesPerMonth] = useState([]); // For total sales per month
     const [serviceData, setServiceData] = useState([]); // For service data (for doughnut chart)
 
     useEffect(() => {
-        fetch('https://vynceianoani.helioho.st/getsales.php')
-            .then(response => response.json())
-            .then(data => {
-                // Extract and set sales data
-                setSalesData(data.sales);
+        // Prompt for username and password
+        const username = prompt("Enter username:");
+        const password = prompt("Enter password:");
 
-                // Extract service data from the API response and format it for the doughnut chart
-                const formattedServiceData = data.services.map(item => ({
-
-                    service: item.service_name,
-                    service: item.service_name,
-                    count: item.service_count
-                }));
-                setServiceData(formattedServiceData);
-
-                // Calculate the total sales per month from the sales data
-                const totalSales = data.sales.reduce((acc, curr) => {
-                    acc[curr.month_year] = (acc[curr.month_year] || 0) + parseFloat(curr.total_sales);
-                    return acc;
-                }, {});
-
-                // Convert the total sales object to an array for bar chart data
-                const totalSalesArray = Object.keys(totalSales).map(monthYear => ({
-                    monthYear,
-                    total: totalSales[monthYear].toFixed(2)
-                }));
-
-                setTotalSalesPerMonth(totalSalesArray);
-            })
-            .catch(error => console.error('Error fetching sales data:', error));
+        // Simple authentication check (replace this with actual authentication logic)
+        if (username === "admin" && password === "password123") {
+            setIsAuthenticated(true); // Set user as authenticated
+        } else {
+            alert("Invalid credentials! Redirecting...");
+            window.location.href = "/"; // Redirect or handle invalid login
+        }
     }, []);
+
+    useEffect(() => {
+        if (isAuthenticated) {
+            fetch('https://vynceianoani.helioho.st/getsales.php')
+                .then(response => response.json())
+                .then(data => {
+                    // Extract and set sales data
+                    setSalesData(data.sales);
+
+                    // Extract service data from the API response and format it for the doughnut chart
+                    const formattedServiceData = data.services.map(item => ({
+                        service: item.service_name,
+                        count: item.service_count
+                    }));
+                    setServiceData(formattedServiceData);
+
+                    // Calculate the total sales per month from the sales data
+                    const totalSales = data.sales.reduce((acc, curr) => {
+                        acc[curr.month_year] = (acc[curr.month_year] || 0) + parseFloat(curr.total_sales);
+                        return acc;
+                    }, {});
+
+                    // Convert the total sales object to an array for bar chart data
+                    const totalSalesArray = Object.keys(totalSales).map(monthYear => ({
+                        monthYear,
+                        total: totalSales[monthYear].toFixed(2)
+                    }));
+
+                    setTotalSalesPerMonth(totalSalesArray);
+                })
+                .catch(error => console.error('Error fetching sales data:', error));
+        }
+    }, [isAuthenticated]);
+
+    if (!isAuthenticated) {
+        return null; // Return nothing if not authenticated
+    }
 
     // Data for the line chart (overall sales over time)
     const lineChartData = {
@@ -115,33 +134,35 @@ const SalesPage = () => {
     };
 
     return (
-        <div className="sales-page-container">
+        <div>   
             <Header />
-            <div className="sales-box">
-                <h2>Total Sales (Approved Status)</h2>
-                <Line data={lineChartData} options={chartOptions} />
-            </div>
-            <div className="sales-box">
-                <h2>Sales per Month</h2>
-                <Bar data={barChartData} options={chartOptions} />
-            </div>
-            <div className="sales-box">
-                <h2>Approved Services by Category</h2>
-                <Doughnut data={doughnutData} />
-            </div>
-            <div className="total-sales-summary">
-                <h3>Sales Summary per Month</h3>
-                <ul>
-                    {totalSalesPerMonth.length === 0 ? (
-                        <li>No sales data available.</li>
-                    ) : (
-                        totalSalesPerMonth.map((item, index) => (
-                            <li key={index}>
-                                {item.monthYear}: ₱{item.total}
-                            </li>
-                        ))
-                    )}
-                </ul>
+            <div className="sales-page-container">
+                <div className="sales-box">
+                    <h2>Total Sales (Approved Status)</h2>
+                    <Line data={lineChartData} options={chartOptions} />
+                </div>
+                <div className="sales-box">
+                    <h2>Sales per Month</h2>
+                    <Bar data={barChartData} options={chartOptions} />
+                </div>
+                <div className="sales-box">
+                    <h2>Approved Services by Category</h2>
+                    <Doughnut data={doughnutData} />
+                </div>
+                <div className="total-sales-summary">
+                    <h3>Sales Summary per Month</h3>
+                    <ul>
+                        {totalSalesPerMonth.length === 0 ? (
+                            <li>No sales data available.</li>
+                        ) : (
+                            totalSalesPerMonth.map((item, index) => (
+                                <li key={index}>
+                                    {item.monthYear}: ₱{item.total}
+                                </li>
+                            ))
+                        )}
+                    </ul>
+                </div>
             </div>
         </div>
     );
