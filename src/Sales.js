@@ -44,7 +44,7 @@ const SalesPage = () => {
                 const formattedServiceData = data.services.map(item => ({
 
                     service: item.service_name,
-                    service: item.service,
+                    service: item.service_name,
                     count: item.service_count
                 }));
                 setServiceData(formattedServiceData);
