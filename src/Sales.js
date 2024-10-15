@@ -42,11 +42,9 @@ const SalesPage = () => {
 
                 // Extract service data from the API response and format it for the doughnut chart
                 const formattedServiceData = data.services.map(item => ({
-<<<<<<< HEAD
+
                     service: item.service_name,
-=======
                     service: item.service,
->>>>>>> a31f5f62106e1c075dcf057fec0de8dccb0993ad
                     count: item.service_count
                 }));
                 setServiceData(formattedServiceData);
