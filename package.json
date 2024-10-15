@@ -6,6 +6,7 @@
     "@adyen/adyen-web": "^5.69.1",
     "@adyen/api-library": "^17.3.0",
     "@babel/core": "^7.16.0",
+    "@paypal/paypal-js": "^8.1.2",
     "@pmmmwh/react-refresh-webpack-plugin": "^0.5.3",
     "@svgr/webpack": "^5.5.0",
     "@testing-library/jest-dom": "^5.17.0",

@@ -108,7 +108,6 @@ const ProfilePage = () => {
     <div>
       <Header />
     <div className="profile-page-container">
-      
       <div className="profile-page">
         <h1>User Profile</h1>
         <div className="profile-picture">
@@ -133,6 +132,7 @@ const ProfilePage = () => {
         </div>
         <div className="profile-info">
           <h2>{userData.fullName}</h2>
+          <p1>Assigned {userData.branchName}: {userData.address}</p1>
           <div className="profile-row">
             <label>Full Name:</label>
             <span>{userData.fullName}</span>

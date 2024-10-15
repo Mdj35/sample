@@ -6,9 +6,9 @@ import './UserPage.css';
 const UserReservationPage = () => {
   const [services, setServices] = useState([]);
   const [branches, setBranches] = useState([]);
-  const [selectedServiceType, setSelectedServiceType] = useState('');
+  const [selectedServiceTypes, setSelectedServiceTypes] = useState([]); // To hold selected service types
   const [filteredServices, setFilteredServices] = useState([]);
-  const [selectedService, setSelectedService] = useState('');
+  const [selectedServices, setSelectedServices] = useState([]); // To hold multiple selected services
   const [selectedBranch, setSelectedBranch] = useState('');
   const [date, setDate] = useState('');
   const [time, setTime] = useState('');
@@ -17,7 +17,7 @@ const UserReservationPage = () => {
   const [success, setSuccess] = useState('');
   const [pending, setPending] = useState(false);
   const [email, setEmail] = useState(null);
-  const [servicePrice, setServicePrice] = useState(null);
+  const [servicePrices, setServicePrices] = useState([]); // Store multiple service prices
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -49,59 +49,92 @@ const UserReservationPage = () => {
     }
   }, [email]);
 
-  // Filter services by selected service type
+  // Filter services by selected service types
   useEffect(() => {
-    if (selectedServiceType) {
-      const filtered = services.filter(service => service.type === selectedServiceType);
+    if (selectedServiceTypes.length > 0) {
+      const filtered = services.filter(service => selectedServiceTypes.includes(service.type));
       setFilteredServices(filtered);
     } else {
       setFilteredServices([]);
     }
-  }, [selectedServiceType, services]);
+  }, [selectedServiceTypes, services]);
 
-  // Generate available times based on service type
+  // Generate available times based on service selections
   useEffect(() => {
     const times = [];
     const startHour = 9; // 9 AM
     const endHour = 19; // 7 PM (19:00)
+    const totalHours = selectedServices.length; // Each service adds 1 hour
 
-    const interval = selectedServiceType === 'Nails' ? 2 : 1; // 2 hours for 'Nails', 1 hour for other services
-
-    for (let hour = startHour; hour < endHour; hour += interval) {
-      const timeString = `${hour}:00-${hour + interval}:00`;
+    for (let hour = startHour; hour + totalHours <= endHour; hour++) {
+      const timeString = `${hour}:00-${hour + totalHours}:00`;
       times.push(timeString);
     }
 
     setAvailableTimes(times);
-  }, [selectedServiceType]);
+  }, [selectedServices]);
 
+  // Handle service type selection using checkboxes
   const handleServiceTypeChange = (event) => {
-    setSelectedServiceType(event.target.value);
-    setSelectedService(''); // Reset service selection when service type changes
+    const serviceType = event.target.value;
+    const isChecked = event.target.checked;
+
+    if (isChecked) {
+      setSelectedServiceTypes((prevSelectedTypes) => [...prevSelectedTypes, serviceType]);
+    } else {
+      setSelectedServiceTypes((prevSelectedTypes) =>
+        prevSelectedTypes.filter((type) => type !== serviceType)
+      );
+    }
   };
 
+  // Handle service selection using checkboxes
   const handleServiceChange = (event) => {
-    const selectedService = event.target.value;
-    const service = filteredServices.find(service => service.name === selectedService);
-    setSelectedService(selectedService);
-    setServicePrice(service ? service.price : null);
+    const serviceName = event.target.value;
+    const isChecked = event.target.checked;
+
+    if (isChecked && selectedServices.length < 5) {
+      // Add the selected service
+      setSelectedServices((prevSelectedServices) => [...prevSelectedServices, serviceName]);
+
+      const selectedService = filteredServices.find(service => service.name === serviceName);
+      if (selectedService) {
+        setServicePrices((prevPrices) => [...prevPrices, selectedService.price]);
+      }
+    } else if (!isChecked) {
+      // Remove the deselected service
+      setSelectedServices((prevSelectedServices) =>
+        prevSelectedServices.filter((service) => service !== serviceName)
+      );
+
+      const selectedService = filteredServices.find(service => service.name === serviceName);
+      if (selectedService) {
+        setServicePrices((prevPrices) =>
+          prevPrices.filter((price) => price !== selectedService.price)
+        );
+      }
+    } else {
+      setError('You can select a maximum of 5 services.');
+    }
   };
 
   const handleSubmit = (event) => {
     event.preventDefault();
 
-    if (!selectedService || !date || !time || !selectedBranch) {
+    if (selectedServices.length === 0 || !date || !time || !selectedBranch) {
       setError('Please fill out all fields.');
       return;
     }
 
+    const totalPrice = servicePrices.reduce((sum, price) => sum + parseFloat(price), 0);
+
     // Save reservation details in local storage, including the email
     localStorage.setItem('reservationDetails', JSON.stringify({
-      service: selectedService,
+      services: selectedServices,
       branch: selectedBranch,
       date,
       time,
-      price: servicePrice,
+      price: totalPrice,
       email: email
     }));
 
@@ -119,35 +152,39 @@ const UserReservationPage = () => {
         {pending && <div className="pending-message">Reservation in progress...</div>}
         <form onSubmit={handleSubmit}>
           <div className="form-group">
-            <label htmlFor="serviceType">Service Type</label>
-            <select
-              id="serviceType"
-              value={selectedServiceType}
-              onChange={handleServiceTypeChange}
-              disabled={pending}
-            >
-              <option value="">Select a service type</option>
-              <option value="Nails">Nails</option>
-              <option value="Lash and Brow">Lash and Brow</option>
-              <option value="Waxing">Waxing</option>
-              <option value="Hair and Make-up">Hair and Make-up</option>
-            </select>
+            <label>Service Type</label>
+            <div className="service-type-checkbox-group">
+              {['Nails', 'Lash and Brow', 'Waxing', 'Hair and Make-up'].map((type) => (
+                <div key={type} className="checkbox-wrapper">
+                  <input
+                    type="checkbox"
+                    id={type}
+                    value={type}
+                    onChange={handleServiceTypeChange}
+                  />
+                  <label htmlFor={type}>{type}</label>
+                </div>
+              ))}
+            </div>
           </div>
           <div className="form-group">
-            <label htmlFor="service">Service</label>
-            <select
-              id="service"
-              value={selectedService}
-              onChange={handleServiceChange}
-              disabled={pending || !selectedServiceType}
-            >
-              <option value="">Select a service</option>
+            <label>Service</label>
+            <div className="service-checkbox-group">
               {filteredServices.map((service) => (
-                <option key={service.id} value={service.name}>
-                  {service.name} - ₱{service.price}
-                </option>
+                <div key={service.id} className="checkbox-wrapper">
+                  <input
+                    type="checkbox"
+                    id={service.name}
+                    value={service.name}
+                    onChange={handleServiceChange}
+                    disabled={selectedServices.length >= 5 && !selectedServices.includes(service.name)} // Disable other checkboxes when 5 services are selected
+                  />
+                  <label htmlFor={service.name}>
+                    {service.name} - ₱{service.price}
+                  </label>
+                </div>
               ))}
-            </select>
+            </div>
           </div>
           <div className="form-group">
             <label htmlFor="branch">Branch</label>
@@ -195,7 +232,7 @@ const UserReservationPage = () => {
           </div>
           <button type="submit" className="reserve-button" disabled={pending}>
             {pending ? 'Proceeding...' : 'Proceed'}
-          </button>   
+          </button>
         </form>
       </div>
     </div>

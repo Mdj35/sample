@@ -5,7 +5,9 @@ import Header from './Header';
 
 const UserReservationsPage = () => {
   const [reservations, setReservations] = useState([]);
+  const [filteredReservations, setFilteredReservations] = useState([]);
   const [email, setEmail] = useState(null);
+  const [selectedDate, setSelectedDate] = useState('');
   const [error, setError] = useState('');
   const navigate = useNavigate();
 
@@ -27,54 +29,75 @@ const UserReservationsPage = () => {
       body: JSON.stringify({ email: userEmail }),
     })
       .then(response => response.json())
-      .then(data => setReservations(data.reservations))
+      .then(data => {
+        setReservations(data.reservations);
+        setFilteredReservations(data.reservations);
+      })
       .catch(error => {
         console.error('Error fetching reservations:', error);
         setError('An error occurred while fetching reservations.');
       });
   }, [navigate]);
 
+  // Handle date filter
+  const handleDateChange = (event) => {
+    const selected = event.target.value;
+    setSelectedDate(selected);
+
+    // Filter reservations by selected date
+    if (selected) {
+      const filtered = reservations.filter(reservation => reservation.date === selected);
+      setFilteredReservations(filtered);
+    } else {
+      setFilteredReservations(reservations); // Reset if no date is selected
+    }
+  };
+
   return (
+    <div>
+         <Header />
     <div className="user-reservations-container">
-      <Header />
       <div className="reservations-box">
         <h2>Your Reservations</h2>
         {error && <div className="error-message">{error}</div>}
-        <table>
-          <thead>
-            <tr>
-              <th>Service</th>
-              <th>Price</th>
-              <th>Date</th>
-              <th>Time</th>
-              <th>Employee</th>
-              <th>Status</th>
-              <th>Branch</th>
-              <th>Address</th>
-            </tr>
-          </thead>
-          <tbody>
-            {reservations.length === 0 ? (
-              <tr>
-                <td colSpan="7">No reservations found.</td>
-              </tr>
-            ) : (
-              reservations.map((reservation, index) => (
-                <tr key={index}>
-                  <td>{reservation.service}</td>
-                  <td>{reservation.price}</td>
-                  <td>{reservation.date}</td>
-                  <td>{reservation.time}</td>
-                  <td>{reservation.employee_name}</td>
-                  <td>{reservation.status}</td>
-                  <td>{reservation.branch_name}</td>
-                  <td>{reservation.branch_address}</td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+
+        {/* Date filter */}
+        <div className="date-filter">
+          <label htmlFor="reservation-date">Filter by Date: </label>
+          <input 
+            type="date" 
+            id="reservation-date" 
+            value={selectedDate} 
+            onChange={handleDateChange}
+          />
+        </div>
+
+        {filteredReservations.length === 0 ? (
+          <p>No reservations found.</p>
+        ) : (
+          <div className="reservations-grid">
+            {filteredReservations.map((reservation, index) => (
+              <div key={index} className="reservation-card">
+                <h3>Reservation #{index + 1}</h3>
+                <p><strong>Branch:</strong> {reservation.branch_name} ({reservation.branch_address})</p>
+                <p><strong>Date:</strong> {reservation.date}</p>
+                <p><strong>Time:</strong> {reservation.time}</p>
+                <p><strong>Status:</strong> {reservation.status}</p>
+                <p><strong>Total Price:</strong> {reservation.price ? reservation.price.toFixed(2) : 'N/A'}</p>
+
+                {/* Display services and their respective employees */}
+                {reservation.services && reservation.services.map((service, serviceIndex) => (
+                  <div key={serviceIndex} className="service-details">
+                    <p><strong>Service:</strong> {service.name}</p>
+                    <p><strong>Employee:</strong> {service.employees.map(emp => emp.name).join(', ')}</p>
+                  </div>
+                ))}
+              </div>
+            ))}
+          </div>
+        )}
       </div>
+    </div>
     </div>
   );
 };

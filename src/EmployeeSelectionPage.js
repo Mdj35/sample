@@ -4,12 +4,12 @@ import Header from './Header';
 import './EmployeeSelectionPage.css';
 
 const EmployeeSelectionPage = () => {
-  const [employees, setEmployees] = useState([]);
-  const [reservationDetails, setReservationDetails] = useState({});
-  const [selectedEmployee, setSelectedEmployee] = useState('');
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
-  const [pending, setPending] = useState(false);
+  const [employees, setEmployees] = useState({}); // Store employees grouped by service
+  const [reservationDetails, setReservationDetails] = useState({}); // Store reservation details
+  const [selectedEmployees, setSelectedEmployees] = useState({}); // For multiple employee selections
+  const [error, setError] = useState(''); // Error message state
+  const [success, setSuccess] = useState(''); // Success message state
+  const [pending, setPending] = useState(false); // Loading state
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -23,7 +23,7 @@ const EmployeeSelectionPage = () => {
   }, [navigate]);
 
   useEffect(() => {
-    if (reservationDetails.service && reservationDetails.branch) {
+    if (reservationDetails.services && reservationDetails.branch) {
       // Fetch employees based on reservation details
       fetch('https://vynceianoani.helioho.st/fetchEmployeesByService.php', {
         method: 'POST',
@@ -31,14 +31,14 @@ const EmployeeSelectionPage = () => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          service: reservationDetails.service,
-          branch: reservationDetails.branch
+          services: reservationDetails.services, // Send multiple services
+          branch: reservationDetails.branch,
         }),
       })
         .then(response => response.json())
         .then(data => {
           if (data.status === 'success') {
-            setEmployees(data.employees);
+            setEmployees(data.employees); // Set employees grouped by service
           } else {
             setError(data.message);
           }
@@ -50,24 +50,50 @@ const EmployeeSelectionPage = () => {
     }
   }, [reservationDetails]);
 
-  const handleSelectEmployee = () => {
-    if (!selectedEmployee) {
-      setError('Please select an employee.');
+  // Handle selecting/deselecting employees for services
+  const handleSelectEmployee = (event, serviceName) => {
+    const employeeId = event.target.value; // Get the selected employee ID
+    const isChecked = event.target.checked; // Get the checkbox state
+
+    setSelectedEmployees((prevSelectedEmployees) => {
+      const updatedEmployees = { ...prevSelectedEmployees };
+
+      if (isChecked) {
+        // Limit to only one employee per service
+        updatedEmployees[serviceName] = [employeeId]; // Replace with the new employee
+      } else {
+        // Deselect employee
+        updatedEmployees[serviceName] = updatedEmployees[serviceName].filter(
+          (id) => id !== employeeId
+        );
+      }
+
+      return updatedEmployees;
+    });
+  };
+
+  const handleSubmit = () => {
+    // Check if at least one employee is selected for each service
+    const errors = reservationDetails.services.some(service => {
+      return !selectedEmployees[service] || selectedEmployees[service].length === 0;
+    });
+
+    if (errors) {
+      setError('Please select at least one employee for each service.');
       return;
     }
 
-    // Add selected employee to reservation details
+    // Update reservation details with selected employees
     const updatedReservationDetails = {
       ...reservationDetails,
-      employee: selectedEmployee
+      employees: selectedEmployees, // Store selected employees
     };
 
-    // Store updated reservation details in local storage
     localStorage.setItem('reservationDetails', JSON.stringify(updatedReservationDetails));
 
     // Navigate to the final reservation page
     navigate('/final-reservation', {
-      state: updatedReservationDetails
+      state: updatedReservationDetails,
     });
   };
 
@@ -75,32 +101,41 @@ const EmployeeSelectionPage = () => {
     <div className="employee-selection-container">
       <Header />
       <div className="selection-box">
-        <h2>Select an Employee</h2>
+        <h2>Select Employees</h2>
         {error && <div className="error-message">{error}</div>}
         {success && <div className="success-message">{success}</div>}
         {pending && <div className="pending-message">Loading...</div>}
         <div className="employee-list">
-          {employees.map(employee => (
-            <div key={employee.id} className="employee-item">
-              <input
-                type="radio"
-                id={`employee-${employee.id}`}
-                name="employee"
-                value={employee.id}
-                onChange={(e) => setSelectedEmployee(e.target.value)}
-              />
-              <label htmlFor={`employee-${employee.id}`} className="employee-label">
-                <img src={employee.profile_image_url} alt={employee.fullName} className="employee-image" />
-                <span>{employee.fullName}</span>
-              </label>
-            </div>
-          ))}
+          {reservationDetails.services &&
+            reservationDetails.services.map((service) => (
+              <div key={service} className="service-group">
+                <h3>Select employees for {service}</h3>
+                {employees[service] && employees[service].length > 0 ? (
+                  employees[service].map((employee) => (
+                    <div key={employee.id} className="employee-item">
+                      <input
+                        type="checkbox"
+                        id={`employee-${employee.id}-${service}`}
+                        value={employee.id} // Set value to employee ID
+                        onChange={(e) => handleSelectEmployee(e, service)}
+                        checked={selectedEmployees[service]?.includes(employee.id) || false}
+                        disabled={selectedEmployees[service]?.length > 0 && !selectedEmployees[service]?.includes(employee.id)}
+                      />
+                      <label htmlFor={`employee-${employee.id}-${service}`} className="employee-label">
+                        <img src={employee.profile_image_url} alt={employee.fullName} className="employee-image" />
+                        <span>{employee.fullName}</span>
+                      </label>
+                    </div>
+                  ))
+                ) : (
+                  <p>No employees available for {service}</p>
+                )}
+              </div>
+            ))}
         </div>
-        <div className='sample'>
-        <button onClick={handleSelectEmployee} disabled={pending}>
-          {pending ? 'Processing...' : 'Select Employee'}
+        <button onClick={handleSubmit} disabled={pending}>
+          {pending ? 'Processing...' : 'Submit'}
         </button>
-        </div>
       </div>
     </div>
   );
