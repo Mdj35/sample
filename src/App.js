@@ -18,6 +18,8 @@ import CreateAdmin from './CreateAdmin';
 import ManageUsersEmployee from './ManageUsersEmployees';
 import AdminTodayReservations from './AdminTodayReservations';
 import ManageServices from './ManageServices';
+import Billing from './Billing';
+import FinalizeBillingPage from './FinalizeBilling';
 
 function App() {
   return (
@@ -39,8 +41,8 @@ function App() {
         <Route path='/manage-user-employee' element={<ManageUsersEmployee/>}/>
         <Route path='/admin-today-reservations' element={<AdminTodayReservations/>}/>
         <Route path='/manage-service' element={<ManageServices/>}/>
-        
-
+        <Route path='/billing' element={<Billing/>}/>
+        <Route path='/finalize-billing' element={<FinalizeBillingPage/>}/>
       </Routes>
     </Router>
   );

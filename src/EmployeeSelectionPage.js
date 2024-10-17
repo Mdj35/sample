@@ -10,6 +10,7 @@ const EmployeeSelectionPage = () => {
   const [error, setError] = useState(''); // Error message state
   const [success, setSuccess] = useState(''); // Success message state
   const [pending, setPending] = useState(false); // Loading state
+  const [isModalOpen, setIsModalOpen] = useState(false); // Modal state
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -73,7 +74,6 @@ const EmployeeSelectionPage = () => {
   };
 
   const handleSubmit = () => {
-    // Check if at least one employee is selected for each service
     const errors = reservationDetails.services.some(service => {
       return !selectedEmployees[service] || selectedEmployees[service].length === 0;
     });
@@ -83,7 +83,6 @@ const EmployeeSelectionPage = () => {
       return;
     }
 
-    // Update reservation details with selected employees
     const updatedReservationDetails = {
       ...reservationDetails,
       employees: selectedEmployees, // Store selected employees
@@ -91,10 +90,59 @@ const EmployeeSelectionPage = () => {
 
     localStorage.setItem('reservationDetails', JSON.stringify(updatedReservationDetails));
 
-    // Navigate to the final reservation page
+    // Trigger normal submit process
     navigate('/final-reservation', {
       state: updatedReservationDetails,
     });
+  };
+
+  const handlePayNow = () => {
+    setIsModalOpen(false); // Close the modal
+    handleSubmit(); // Trigger the normal submit function
+  };
+
+  const handlePayLater = () => {
+    setIsModalOpen(false);
+    setPending(true);
+  
+    // Prepare the data to send to the server
+    const data = {
+      services: reservationDetails.services,
+      date: reservationDetails.date,
+      time: reservationDetails.time,
+      email: reservationDetails.email,
+      employees: selectedEmployees,
+      price: reservationDetails.price,
+      branch: reservationDetails.branch,
+    };
+  
+    // Call the API to create reservation and billing
+    fetch('https://vynceianoani.helioho.st/billing.php', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(data),
+    })
+      .then((response) => response.json())
+      .then((result) => {
+        setPending(false);
+        if (result.status === 'success') {
+          setSuccess('Reservation created successfully with Pay Later option!');
+          navigate('/userpage', { state: { reservationId: result.reservation_id } });
+        } else {
+          setError(result.message || 'Failed to create reservation. Please try again.');
+        }
+      })
+      .catch((error) => {
+        setPending(false);
+        setError('Failed to create reservation. Please try again later.');
+        console.error('Error:', error);
+      });
+  };
+  
+  const openModal = () => {
+    setIsModalOpen(true); // Open the modal
   };
 
   return (
@@ -133,10 +181,22 @@ const EmployeeSelectionPage = () => {
               </div>
             ))}
         </div>
-        <button onClick={handleSubmit} disabled={pending}>
+        <button onClick={openModal} disabled={pending}>
           {pending ? 'Processing...' : 'Submit'}
         </button>
       </div>
+
+      {isModalOpen && (
+        <div className="modal">
+          <div className="modal-content">
+          <button className="modal-close" onClick={() => setIsModalOpen(false)}>×</button>
+
+            <h3>Choose Payment Option</h3>
+            <button onClick={handlePayNow}>Pay Now</button>
+            <button onClick={handlePayLater}>Pay Later</button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

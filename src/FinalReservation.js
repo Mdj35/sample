@@ -44,72 +44,68 @@ const FinalizeReservationPage = () => {
         onApprove: (data, actions) => {
           return actions.order.capture().then(details => {
             setIsPaid(true);
+            createReservation(reservationDetails);
             // Save payment details to the backend
-            savePaymentToDatabase(); // This function handles saving payment info and reservation
           });
         },
         onError: (err) => {
           setError('Payment failed. Please try again.');
           setPending(false);
+           
         }
-      }).render('#paypal-button-container'); // Render PayPal button in the container
+      }).render('#paypal-button-container'); 
     });
   }, [location, navigate, reservationDetails.price]);
 
-  // Function to create reservation (called once)
-  // Inside the createReservation function in FinalizeReservationPage component
-const createReservation = (details) => {
-  if (reservationId) return; // If reservation is already created, do nothing
-
-  setPending(true);
-
-  const reservationData = {
-    ...details,
-    status: 'pending', // Add the status field to the request
-  };
-
-  fetch('https://vynceianoani.helioho.st/reserve.php', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(reservationData), // Send reservation data with status
-  })
-    .then(response => response.json())
-    .then(data => {
-      if (data.status === 'success' && data.reservation_id) {
-        console.log('Reservation successful with ID:', data.reservation_id);
-        setReservationId(data.reservation_id); // Store the reservation ID
-        setPending(false);
-      } else {
-        setPending(false);
-        setError(data.message || 'Failed to create reservation.');
-      }
+  const createReservation = (details) => {
+    if (reservationId) return; 
+  
+    setPending(true);
+  
+    const reservationData = {
+      ...details,
+      status: 'pending', // Add the status field to the request
+    };
+  
+    fetch('https://vynceianoani.helioho.st/billing.php', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(reservationData), // Send reservation data with status
     })
-    .catch(error => {
-      console.error('Error creating reservation:', error);
-      setPending(false);
-      setError('Failed to create reservation.');
-    });
-};
+      .then(response => response.json())
+      .then(data => {
+        if (data.status === 'success' && data.billing_id) { // Change here to billing_id
+          console.log('Reservation successful with billing ID:', data.billing_id); // Change here to billing_id
+          setReservationId(data.billing_id); // Store the billing ID instead
+          setPending(false);
+        } else {
+          setPending(false);
+          setError(data.message || 'Failed to create reservation.');
+        }
+      })
+      .catch(error => {
+        console.error('Error creating reservation:', error);
+        setPending(false);
+        setError('Failed to create reservation.');
+      });
+  };
+  
 
 
   // Function to save payment details to the backend (after PayPal confirms payment)
   const savePaymentToDatabase = () => {
-    if (!reservationId) {
-      // Only create a reservation if it hasn't been created yet
-      createReservation(reservationDetails); 
-    }
-
+    
     const paymentData = {
       email: reservationDetails.email, // Send the email instead of customer_id
-      reservation_id: reservationId, // Use the generated reservation ID
+      billing_id: reservationId, // Use the generated reservation ID
       date_of_payment: new Date().toISOString(), // Current date
       type_of_payment: 'PayPal', // Default PayPal
       payment_confirmation: 'success' // Default success
     };
 
-    fetch('https://vynceianoani.helioho.st/save-payment.php', {
+    fetch('https://vynceianoani.helioho.st/payment2.php', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
