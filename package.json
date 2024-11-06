@@ -43,6 +43,7 @@
     "jest": "^27.4.3",
     "jest-resolve": "^27.4.2",
     "jest-watch-typeahead": "^1.0.0",
+    "jspdf": "^2.5.2",
     "mini-css-extract-plugin": "^2.4.5",
     "ngrok": "^5.0.0-beta.2",
     "postcss": "^8.4.4",

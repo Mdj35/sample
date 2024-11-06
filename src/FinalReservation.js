@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import Header from './Header';
+import jsPDF from 'jspdf';
 import './FinalReservation.css';
 
-// Load PayPal SDK
 const loadPayPalScript = (callback) => {
   const script = document.createElement('script');
-  script.src = 'https://www.paypal.com/sdk/js?client-id=ASKmv9SI7KJMNK3yafnnS5xEG-BgdxBaTHuUmU9UXtSJ5VjoyaICL9Nqre4vewdy-q5uf5Lin_lC27Yl'; // Replace with your PayPal client ID
+  script.src = 'https://www.paypal.com/sdk/js?client-id=ASKmv9SI7KJMNK3yafnnS5xEG-BgdxBaTHuUmU9UXtSJ5VjoyaICL9Nqre4vewdy-q5uf5Lin_lC27Yl';
   script.onload = () => callback();
   document.body.appendChild(script);
 };
@@ -15,21 +15,21 @@ const FinalizeReservationPage = () => {
   const [reservationDetails, setReservationDetails] = useState({});
   const [error, setError] = useState('');
   const [pending, setPending] = useState(false);
-  const [isPaid, setIsPaid] = useState(false); // Track payment status
-  const [reservationId, setReservationId] = useState(null); // Track reservation ID
+  const [isPaid, setIsPaid] = useState(false);
+  const [reservationId, setReservationId] = useState(null);
+  const [queuePosition, setQueuePosition] = useState([]);
+  const [showModal, setShowModal] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
 
   useEffect(() => {
-    // Retrieve reservation details from location state
     const details = location.state;
     if (details) {
       setReservationDetails(details);
     } else {
-      navigate('/userpage'); // Redirect if no reservation details found
+      navigate('/userpage');
     }
 
-    // Load PayPal script when component mounts
     loadPayPalScript(() => {
       window.paypal.Buttons({
         createOrder: (data, actions) => {
@@ -42,16 +42,14 @@ const FinalizeReservationPage = () => {
           });
         },
         onApprove: (data, actions) => {
-          return actions.order.capture().then(details => {
+          return actions.order.capture().then(() => {
             setIsPaid(true);
             createReservation(reservationDetails);
-            // Save payment details to the backend
           });
         },
-        onError: (err) => {
+        onError: () => {
           setError('Payment failed. Please try again.');
           setPending(false);
-           
         }
       }).render('#paypal-button-container'); 
     });
@@ -64,7 +62,7 @@ const FinalizeReservationPage = () => {
   
     const reservationData = {
       ...details,
-      status: 'pending', // Add the status field to the request
+      status: 'pending',
     };
   
     fetch('https://vynceianoani.helioho.st/billing.php', {
@@ -72,37 +70,54 @@ const FinalizeReservationPage = () => {
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(reservationData), // Send reservation data with status
+      body: JSON.stringify(reservationData),
     })
       .then(response => response.json())
       .then(data => {
-        if (data.status === 'success' && data.billing_id) { // Change here to billing_id
-          console.log('Reservation successful with billing ID:', data.billing_id); // Change here to billing_id
-          setReservationId(data.billing_id); // Store the billing ID instead
+        if (data.status === 'success' && data.billing_id) {
+          setReservationId(data.billing_id);
+          getQueuePosition(details.services); 
           setPending(false);
         } else {
           setPending(false);
           setError(data.message || 'Failed to create reservation.');
         }
       })
-      .catch(error => {
-        console.error('Error creating reservation:', error);
+      .catch(() => {
         setPending(false);
         setError('Failed to create reservation.');
       });
   };
-  
 
+  const getQueuePosition = (services) => {
+    const queueRequests = services.map(service =>
+      fetch('https://vynceianoani.helioho.st/queue.php', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ serviceName: service }),
+      })
+        .then(response => response.json())
+        .then(data => ({ service, position: data.queue_position || 'N/A' }))
+    );
 
-  // Function to save payment details to the backend (after PayPal confirms payment)
+    Promise.all(queueRequests)
+      .then(positions => {
+        setQueuePosition(positions); 
+      })
+      .catch(() => {
+        setError('Failed to fetch queue position.');
+      });
+  };
+
   const savePaymentToDatabase = () => {
-    
     const paymentData = {
-      email: reservationDetails.email, // Send the email instead of customer_id
-      billing_id: reservationId, // Use the generated reservation ID
-      date_of_payment: new Date().toISOString(), // Current date
-      type_of_payment: 'PayPal', // Default PayPal
-      payment_confirmation: 'success' // Default success
+      email: reservationDetails.email,
+      billing_id: reservationId,
+      date_of_payment: new Date().toISOString(),
+      type_of_payment: 'PayPal',
+      payment_confirmation: 'success'
     };
 
     fetch('https://vynceianoani.helioho.st/payment2.php', {
@@ -115,17 +130,47 @@ const FinalizeReservationPage = () => {
       .then(response => response.json())
       .then(data => {
         if (data.status === 'success') {
-          navigate('/userpage'); // Redirect to a success page after payment
+          setShowModal(true); 
         } else {
           setError('Failed to save payment information.');
           setPending(false);
         }
       })
-      .catch(error => {
-        console.error('Error saving payment information:', error);
+      .catch(() => {
         setError('Failed to save payment information.');
         setPending(false);
       });
+  };
+
+  const closeModal = () => {
+    setShowModal(false);
+    navigate('/userpage'); 
+  };
+
+  const downloadReceipt = () => {
+    const doc = new jsPDF();
+    doc.setFontSize(12);
+    doc.text("Reservation Receipt", 10, 10);
+    doc.text(`Reservation ID: ${reservationId}`, 10, 20);
+    doc.text(`Email: ${reservationDetails.email}`, 10, 30);
+    doc.text(`Branch: ${reservationDetails.branch}`, 10, 40);
+    doc.text(`Date: ${reservationDetails.date}`, 10, 50);
+    doc.text(`Time: ${reservationDetails.time}`, 10, 60);
+    doc.text(`Price: ${reservationDetails.price ? reservationDetails.price.toFixed(2) : 'N/A'}`, 10, 70);
+
+    doc.text("Services:", 10, 80);
+    reservationDetails.services.forEach((service, index) => {
+      const employee = reservationDetails.employees && reservationDetails.employees[service] 
+                       ? reservationDetails.employees[service][0] : 'N/A';
+      doc.text(`${index + 1}. ${service} - Employee: ${employee}`, 10, 90 + index * 10);
+    });
+
+    doc.text("Queue Positions:", 10, 100 + reservationDetails.services.length * 10);
+    queuePosition.forEach((q, index) => {
+      doc.text(`${q.service}: Position ${q.position}`, 10, 110 + reservationDetails.services.length * 10 + index * 10);
+    });
+
+    doc.save("ReservationReceipt.pdf");
   };
 
   return (
@@ -142,21 +187,19 @@ const FinalizeReservationPage = () => {
             <p><strong>Time:</strong> {reservationDetails.time}</p>
             <p><strong>Price:</strong> {reservationDetails.price ? reservationDetails.price.toFixed(2) : 'N/A'}</p>
 
-            {/* Map through services and display selected employees */}
             {reservationDetails.services && reservationDetails.services.map((service, index) => (
               <div key={index}>
                 <p><strong>Service {index + 1}:</strong> {service}</p>
                 <p>
                   <strong>Employee:</strong> 
                   {reservationDetails.employees && reservationDetails.employees[service] 
-                    ? reservationDetails.employees[service][0] // Display the selected employee for this service
+                    ? reservationDetails.employees[service][0]
                     : 'N/A'}
                 </p>
               </div>
             ))}
           </div>
 
-          {/* PayPal Button */}
           <div id="paypal-button-container"></div>
 
           <div className="sample-button">
@@ -166,6 +209,22 @@ const FinalizeReservationPage = () => {
           </div>
         </div>
       </div>
+
+      {showModal && (
+        <div className="modal-overlay">
+          <div className="modal-content">
+            <h3>Reservation Confirmed!</h3>
+            <p>Your reservation was successful. Please download your receipt below.</p>
+            <ul>
+              {queuePosition.map((qp, index) => (
+                <li key={index}>{qp.service}: Queue Position {qp.position}</li>
+              ))}
+            </ul>
+            <button onClick={downloadReceipt}>Download Receipt (PDF)</button>
+            <button onClick={closeModal}>Close</button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
