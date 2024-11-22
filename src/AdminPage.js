@@ -163,8 +163,9 @@ const AdminReservationPage = () => {
             <select id="filter" value={filter} onChange={(e) => setFilter(e.target.value)}>
               <option value="All">All</option>
               <option value="Approved">Approved</option>
-              <option value="Rejected">Rejected</option>
               <option value="Completed">Completed</option>
+              <option value="Pending">Pending</option>
+
             </select>
           </div>
 
@@ -194,12 +195,24 @@ const AdminReservationPage = () => {
                   <td>{reservation.time}</td>
                   <td>₱{reservation.price}</td>
                   <td>
-                    {filterServicesForEmployee(reservation.services).some(service => service.status === 'completed') ? (
-                      <button onClick={() => fetchProofImage(reservation.reservation_id)}>Show Proof</button>
-                    ) : (
-                      <span>No actions available</span>
-                    )}
-                  </td>
+  {filterServicesForEmployee(reservation.services).map((service, index) => (
+    <div key={index}>
+      {service.status !== 'approved' && service.status !== 'rejected' && service.status !== 'completed' ? (
+        <>
+          <button onClick={() => updateStatus(reservation.reservation_id, service.service_id, 'approved')}>
+            Approve
+          </button>
+          
+        </>
+      ) : service.status === 'completed' ? (
+        <button onClick={() => fetchProofImage(reservation.reservation_id)}>Show Proof</button>
+      ) : (
+        <span className={`status ${service.status.toLowerCase()}`}>{service.status}</span>
+      )}
+    </div>
+  ))}
+</td>
+
                 </tr>
               ))}
             </tbody>
