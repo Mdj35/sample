@@ -55,49 +55,53 @@ const UserReservationsPage = () => {
 
   return (
     <div>
-         <Header />
-    <div className="user-reservations-container">
-      <div className="reservations-box">
-        <h2>Your Reservations</h2>
-        {error && <div className="error-message">{error}</div>}
+      <Header />
+      <div className="user-reservations-container">
+        <div className="reservations-box">
+          <h2>Your Reservations</h2>
+          {error && <div className="error-message">{error}</div>}
 
-        {/* Date filter */}
-        <div className="date-filter">
-          <label htmlFor="reservation-date">Filter by Date: </label>
-          <input 
-            type="date" 
-            id="reservation-date" 
-            value={selectedDate} 
-            onChange={handleDateChange}
-          />
-        </div>
-
-        {filteredReservations.length === 0 ? (
-          <p>No reservations found.</p>
-        ) : (
-          <div className="reservations-grid">
-            {filteredReservations.map((reservation, index) => (
-              <div key={index} className="reservation-card">
-                <h3>Reservation #{index + 1}</h3>
-                <p><strong>Branch:</strong> {reservation.branch_name} ({reservation.branch_address})</p>
-                <p><strong>Date:</strong> {reservation.date}</p>
-                <p><strong>Time:</strong> {reservation.time}</p>
-                <p><strong>Status:</strong> {reservation.status}</p>
-                <p><strong>Total Price:</strong> {reservation.price ? reservation.price.toFixed(2) : 'N/A'}</p>
-
-                {/* Display services and their respective employees */}
-                {reservation.services && reservation.services.map((service, serviceIndex) => (
-                  <div key={serviceIndex} className="service-details">
-                    <p><strong>Service:</strong> {service.name}</p>
-                    <p><strong>Employee:</strong> {service.employees.map(emp => emp.name).join(', ')}</p>
-                  </div>
-                ))}
-              </div>
-            ))}
+          {/* Date filter */}
+          <div className="date-filter">
+            <label htmlFor="reservation-date">Filter by Date: </label>
+            <input
+              type="date"
+              id="reservation-date"
+              value={selectedDate}
+              onChange={handleDateChange}
+            />
           </div>
-        )}
+
+          {filteredReservations.length === 0 ? (
+            <p>No reservations found.</p>
+          ) : (
+            <div className="reservations-grid">
+              {filteredReservations.map((reservation, index) => (
+                <div key={index} className="reservation-card">
+                  <h3>Reservation #{index + 1}</h3>
+                  <p><strong>Branch:</strong> {reservation.branch_name} ({reservation.branch_address})</p>
+                  <p><strong>Date:</strong> {reservation.date}</p>
+                  <p><strong>Time:</strong> {reservation.time}</p>
+                  <p><strong>Status:</strong> {reservation.status}</p>
+                  <p><strong>Total Price:</strong> {reservation.price ? reservation.price.toFixed(2) : 'N/A'}</p>
+
+                  {/* Display services and their respective employees */}
+                  {reservation.services && reservation.services.map((service, serviceIndex) => (
+                    <div key={serviceIndex} className="service-details">
+                      <p><strong>Service:</strong> {service.name}</p>
+                      <p><strong>Employee:</strong> {service.employees.map(emp => emp.name).join(', ')}</p>
+                      {/* Conditionally render Queue Position based on status */}
+                      {reservation.status !== 'completed' && (
+                        <p><strong>Queue Position:</strong> {service.queue_position}</p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
-    </div>
     </div>
   );
 };

@@ -55,41 +55,49 @@ const FinalizeReservationPage = () => {
     });
   }, [location, navigate, reservationDetails.price]);
 
-  const createReservation = (details) => {
-    if (reservationId) return; 
+  const createReservation = async (details) => {
+    if (reservationId) return;
   
     setPending(true);
   
-    const reservationData = {
-      ...details,
-      status: 'pending',
-    };
+    try {
+      // Fetch queue positions
+      const queuePositions = await getQueuePosition(details.services);
   
-    fetch('https://vynceianoani.helioho.st/billing.php', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(reservationData),
-    })
-      .then(response => response.json())
-      .then(data => {
-        if (data.status === 'success' && data.billing_id) {
-          setReservationId(data.billing_id);
-          getQueuePosition(details.services); 
-          setPending(false);
-        } else {
-          setPending(false);
-          setError(data.message || 'Failed to create reservation.');
-        }
-      })
-      .catch(() => {
-        setPending(false);
-        setError('Failed to create reservation.');
+      // Attach queue positions to the reservation data
+      const reservationData = {
+        ...details,
+        status: 'pending',
+        queuePositions: queuePositions, // Include queue positions
+      };
+  
+      // Submit the reservation
+      const response = await fetch('https://vynceianoani.helioho.st/billing.php', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(reservationData),
       });
+  
+      const data = await response.json();
+  
+      if (data.status === 'success' && data.billing_id) {
+        setReservationId(data.billing_id);
+        setQueuePosition(queuePositions); // Update the state with queue positions
+        setPending(false);
+      } else {
+        setPending(false);
+        setError(data.message || 'Failed to create reservation.');
+      }
+    } catch {
+      setPending(false);
+      setError('Failed to create reservation.');
+    }
   };
+  
 
-  const getQueuePosition = (services) => {
+  const getQueuePosition = async (services) => {
     const queueRequests = services.map(service =>
       fetch('https://vynceianoani.helioho.st/queue.php', {
         method: 'POST',
@@ -99,17 +107,20 @@ const FinalizeReservationPage = () => {
         body: JSON.stringify({ serviceName: service }),
       })
         .then(response => response.json())
-        .then(data => ({ service, position: data.queue_position || 'N/A' }))
+        .then(data => ({
+          service,
+          position: data.queue_position || 'N/A',
+        }))
     );
-
-    Promise.all(queueRequests)
-      .then(positions => {
-        setQueuePosition(positions); 
-      })
-      .catch(() => {
-        setError('Failed to fetch queue position.');
-      });
+  
+    try {
+      return await Promise.all(queueRequests);
+    } catch {
+      setError('Failed to fetch queue position.');
+      return [];
+    }
   };
+  
 
   const savePaymentToDatabase = () => {
     const paymentData = {

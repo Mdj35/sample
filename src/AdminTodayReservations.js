@@ -1,14 +1,33 @@
 // AdminTodayReservations.js
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { getStorage, ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
+import { initializeApp } from 'firebase/app';
 import Header from './AdminHeader';
 import './AdminPage.css';
+
+// Firebase Configuration
+const firebaseConfig = {
+  apiKey: "AIzaSyBXPb6IJPETv7-maiX_iBMvlP1cVxqLf-U",
+  authDomain: "sample-c5864.firebaseapp.com",
+  databaseURL: "https://sample-c5864-default-rtdb.firebaseio.com",
+  projectId: "sample-c5864",
+  storageBucket: "sample-c5864.appspot.com",
+  messagingSenderId: "977993400479",
+  appId: "1:977993400479:web:41c9b5a364b727de5022aa",
+  measurementId: "G-8FTE1QF1G2"
+};
+const app = initializeApp(firebaseConfig);
+const storage = getStorage(app);
 
 const AdminTodayReservations = () => {
   const [reservations, setReservations] = useState([]);
   const [error, setError] = useState('');
-  const [userData, setUserData] = useState(null);
   const [success, setSuccess] = useState('');
+  const [userData, setUserData] = useState(null);
+  const [selectedReservation, setSelectedReservation] = useState(null);
+  const [proofPicture, setProofPicture] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -63,6 +82,59 @@ const AdminTodayReservations = () => {
       });
   }, [navigate]); 
 
+  const handleFileChange = (e) => {
+    setProofPicture(e.target.files[0]);
+  };
+
+  const uploadProofPicture = async () => {
+    if (!proofPicture) {
+      setError('Please select a proof picture.');
+      return;
+    }
+
+    const fileName = `proof_${selectedReservation.id}_${Date.now()}`;
+    const storageRef = ref(storage, `proofs/${fileName}`);
+
+    try {
+      const uploadTask = await uploadBytesResumable(storageRef, proofPicture);
+      const downloadURL = await getDownloadURL(uploadTask.ref);
+
+      // Save proof URL to the database
+      const response = await fetch('https://vynceianoani.helioho.st/storeCompletedReservation.php', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          reservationId: selectedReservation.id,
+          proofUrl: downloadURL,
+          employeeId: userData.id,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (result.status === 'success') {
+        setSuccess('Proof uploaded successfully!');
+        setError('');
+        // Call updateStatusToCompleted
+        await updateStatusToCompleted(selectedReservation.id);
+        setIsModalOpen(false);
+      } else {
+        setError(result.message || 'Failed to save proof to database.');
+        setSuccess('');
+      }
+    } catch (error) {
+      setError('An error occurred while uploading the proof.');
+      setSuccess('');
+    }
+  };
+
+  const openModal = (reservation) => {
+    setSelectedReservation(reservation);
+    setIsModalOpen(true);
+  };
+
   const updateStatusToCompleted = async (reservationId) => {
     try {
       const response = await fetch('https://vynceianoani.helioho.st/completeReservation.php', {
@@ -70,7 +142,7 @@ const AdminTodayReservations = () => {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ id: reservationId,employee_id: userData.id, status: 'completed' }), // Update to 'completed'
+        body: JSON.stringify({ id: reservationId, employee_id: userData.id, status: 'completed' }), // Update to 'completed'
       });
 
       const result = await response.json();
@@ -100,11 +172,23 @@ const AdminTodayReservations = () => {
     <div>
       <Header />
       <div className="admin-reservation-container">
+        {/* Modal */}
+        {isModalOpen && (
+          <div className="modal">
+            <div className="modal-content">
+              <h3>Upload Proof Picture</h3>
+              <input type="file" onChange={handleFileChange} />
+              <button onClick={uploadProofPicture}>Upload and Complete</button>
+              <button onClick={() => setIsModalOpen(false)}>Cancel</button>
+            </div>
+          </div>
+        )}
+
         <div className="admin-box">
           <h2>Today's Reservations</h2>
           {error && <div className="error-message">{error}</div>}
           {success && <div className="success-message">{success}</div>}
-          
+
           {reservations.length === 0 ? (
             <p>No reservations or appointments for today.</p>
           ) : (
@@ -125,15 +209,13 @@ const AdminTodayReservations = () => {
                   <tr key={reservation.id}>
                     <td>{reservation.user_email}</td>
                     <td>{reservation.service_name}</td>
-                    <td>{reservation.date}</td> {/* Display reservation date */}
+                    <td>{reservation.date}</td>
                     <td>{reservation.time}</td>
                     <td>₱{reservation.price}</td>
                     <td>{reservation.status}</td>
                     <td>
                       {reservation.status !== 'completed' ? (
-                        <button onClick={() => updateStatusToCompleted(reservation.id)}>
-                          Mark as Completed
-                        </button>
+                        <button onClick={() => openModal(reservation)}>Mark as Completed</button>
                       ) : (
                         <span>Completed</span>
                       )}

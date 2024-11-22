@@ -113,4 +113,12 @@
     color: green;
     margin-bottom: 10px;
   }
+  .proof-image {
+    max-width: 100%;
+    max-height: 400px; /* Adjust this value to your preferred maximum height */
+    margin: 0 auto;
+    display: block;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+  }
   
